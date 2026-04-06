@@ -20,7 +20,8 @@ import { getGlobalConfig, saveGlobalConfig } from '../../utils/config.js'
 type Phase =
   | { step: 'menu' }
   | { step: 'input-server' }
-  | { step: 'input-key' }
+  | { step: 'auth-choice' }
+  | { step: 'enter-key' }
   | { step: 'connecting' }
   | { step: 'pairing'; serverUrl: string; pairingId: string }
   | { step: 'error'; message: string }
@@ -114,12 +115,13 @@ function RemoteConnectUI({
         <TextInput
           value={serverUrl}
           onChange={setServerUrl}
+          cursorOffset={serverUrl.length}
+          onChangeCursorOffset={() => {}}
           onSubmit={(val: string) => {
             const trimmed = val.trim()
             if (!trimmed) { onDone('Cancelled', { display: 'system' }); return }
             setServerUrl(trimmed)
-            // Ask: pair or enter key manually
-            setPhase({ step: 'input-key' })
+            setPhase({ step: 'auth-choice' })
           }}
           placeholder="http://your-server:8081"
         />
@@ -127,24 +129,47 @@ function RemoteConnectUI({
     )
   }
 
-  if (phase.step === 'input-key') {
+  if (phase.step === 'auth-choice') {
     return (
       <Box flexDirection="column" gap={1}>
         <Text bold>Authentication</Text>
-        <Select
-          options={[
-            { value: 'pair', label: 'Request access', description: 'Send pairing request to server admin for approval' },
-            { value: 'key', label: 'Enter client key', description: 'I already have a client key' },
-          ]}
-          onChange={(val) => {
-            if (val === 'pair') {
-              void doPair(serverUrl)
-            } else {
-              setClientKey('')
-              setPhase({ step: 'menu' }) // reuse menu with key input
-            }
+        <Text dimColor>Server: {serverUrl}</Text>
+        <Box marginTop={1}>
+          <Select
+            options={[
+              { value: 'pair', label: 'Request access', description: 'Send pairing request to server admin for approval' },
+              { value: 'key', label: 'Enter client key', description: 'I already have a client key' },
+            ]}
+            onChange={(val) => {
+              if (val === 'pair') {
+                void doPair(serverUrl)
+              } else {
+                setPhase({ step: 'enter-key' })
+              }
+            }}
+            onCancel={() => setPhase({ step: 'input-server' })}
+          />
+        </Box>
+      </Box>
+    )
+  }
+
+  if (phase.step === 'enter-key') {
+    return (
+      <Box flexDirection="column" gap={1}>
+        <Text bold>Client Key</Text>
+        <Text dimColor>Server: {serverUrl}</Text>
+        <TextInput
+          value={clientKey}
+          onChange={setClientKey}
+          cursorOffset={clientKey.length}
+          onChangeCursorOffset={() => {}}
+          onSubmit={(val: string) => {
+            const trimmed = val.trim()
+            if (!trimmed) { setPhase({ step: 'auth-choice' }); return }
+            void doConnect(serverUrl, trimmed)
           }}
-          onCancel={() => setPhase({ step: 'input-server' })}
+          placeholder="ck_..."
         />
       </Box>
     )
@@ -214,26 +239,6 @@ function RemoteConnectUI({
     { value: 'new-server', label: 'Connect to new server', description: 'Enter server URL and pair or enter key' },
     { value: 'cancel', label: 'Cancel' },
   )
-
-  // If we came from "Enter client key" option, show key input
-  if (!savedKey && savedServer && !isConnected) {
-    return (
-      <Box flexDirection="column" gap={1}>
-        <Text bold>Client Key</Text>
-        <Text dimColor>Enter your client key:</Text>
-        <TextInput
-          value={clientKey}
-          onChange={setClientKey}
-          onSubmit={(val: string) => {
-            const trimmed = val.trim()
-            if (!trimmed) { setPhase({ step: 'input-key' }); return }
-            void doConnect(serverUrl, trimmed)
-          }}
-          placeholder="ck_..."
-        />
-      </Box>
-    )
-  }
 
   return (
     <Box flexDirection="column" gap={1}>
