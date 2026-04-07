@@ -67,6 +67,8 @@ function ThirdPartyApiKeySetup({
   const [step, setStep] = React.useState<'base-url' | 'api-key'>('base-url')
   const [apiKey, setApiKey] = React.useState('')
   const [baseUrl, setBaseUrl] = React.useState('')
+  const [baseUrlCursor, setBaseUrlCursor] = React.useState(0)
+  const [apiKeyCursor, setApiKeyCursor] = React.useState(0)
 
   useKeybinding('confirm:no', onBack, { context: 'Cancel', isActive: step === 'base-url' })
 
@@ -77,7 +79,9 @@ function ThirdPartyApiKeySetup({
         <Text dimColor>Enter base URL (leave empty for https://api.openai.com/v1):</Text>
         <TextInput
           value={baseUrl}
-          onChange={setBaseUrl}
+          onChange={(v) => { setBaseUrl(v); setBaseUrlCursor(v.length) }}
+          cursorOffset={baseUrlCursor}
+          onChangeCursorOffset={setBaseUrlCursor}
           onSubmit={(value: string) => {
             setBaseUrl(value.trim())
             setStep('api-key')
@@ -95,7 +99,9 @@ function ThirdPartyApiKeySetup({
       <Text dimColor>Enter your API key:</Text>
       <TextInput
         value={apiKey}
-        onChange={setApiKey}
+        onChange={(v) => { setApiKey(v); setApiKeyCursor(v.length) }}
+        cursorOffset={apiKeyCursor}
+        onChangeCursorOffset={setApiKeyCursor}
         onSubmit={(value: string) => {
           const trimmed = value.trim()
           if (!trimmed) return
