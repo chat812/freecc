@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Project
 
-Free CC — a fork of Claude Code with custom features: multi-provider support, self-hosted remote relay, and OpenAI integration.
+Free CC — Unleash your full power with Claude Code. Multi-provider support, self-hosted remote web access, OpenAI integration, and all experimental features unlocked.
 
 ## Common commands
 
