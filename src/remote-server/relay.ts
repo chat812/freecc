@@ -17,6 +17,7 @@ let registeredMessagesRef: MessagesRef | null = null
 let pollingInterval: ReturnType<typeof setInterval> | null = null
 let lastLen = 0
 let lastText = ''
+let isStreaming = false
 
 function isPluginEnabled(): boolean {
   try {
@@ -35,6 +36,7 @@ export function setRemoteClient(client: RemoteClient | null): void {
   activeClient = client
   lastLen = 0
   lastText = ''
+  isStreaming = false
 
   if (client && !pollingInterval) {
     startPolling()
@@ -110,14 +112,23 @@ function startPolling(): void {
       const delta = currentLastText.slice(lastText.length)
       if (delta && activeClient) {
         const id = lastMsg?.uuid || 'stream'
-        // Use stream events for live text
         if (lastText.length === 0) {
           activeClient.sendStreamStart(id)
           activeClient.send({ type: 'status', processing: true, timestamp: Date.now() })
+          isStreaming = true
         }
         activeClient.sendStreamDelta(id, delta)
       }
       lastText = currentLastText
+      return
+    }
+
+    // Stream ended: was streaming but text stopped growing (same count, same text)
+    if (currentLen === lastLen && isStreaming && lastText.length > 0 && currentLastText === lastText) {
+      const id = lastMsg?.uuid || 'stream'
+      activeClient.sendStreamEnd(id)
+      activeClient.send({ type: 'status', processing: false, timestamp: Date.now() })
+      isStreaming = false
       return
     }
 
@@ -144,12 +155,17 @@ function sendMessage(msg: any): void {
   if (text.includes('<command-name>') || text.includes('<local-command') || text.includes('<bash-')) return
 
   if (msgType === 'assistant') {
-    // End any active stream before sending a complete message
+    // End any active stream if a new message arrives while streaming
     if (lastText.length > 0) {
       activeClient.sendStreamEnd(msg.uuid || 'stream')
+      isStreaming = false
     }
     if (text) {
       activeClient.sendAssistantMessage(text, msg.uuid)
+      // For non-streamed complete responses, mark processing done
+      if (!isStreaming) {
+        activeClient.send({ type: 'status', processing: false, timestamp: Date.now() })
+      }
     }
     // Tool use and thinking blocks
     const blocks = msg.message?.content
@@ -176,8 +192,6 @@ function sendMessage(msg: any): void {
         }
       }
     }
-    // Signal that processing is done after a complete assistant message
-    activeClient.send({ type: 'status', processing: false, timestamp: Date.now() })
   } else if (msgType === 'user') {
     // Forward local terminal input to web, but skip messages that came FROM the web
     if (text && text !== lastWebInput) {
