@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/screenshot.png" alt="Free CC" width="720" />
-</p>
-
 <h1 align="center">Free CC</h1>
 
 <p align="center">
