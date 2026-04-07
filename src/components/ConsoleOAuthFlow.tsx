@@ -425,11 +425,12 @@ export function ConsoleOAuthFlow({
             </Box>
           </Box>}
       <Box paddingLeft={1} flexDirection="column" gap={1}>
-        <OAuthStatusMessage oauthStatus={oauthStatus} mode={mode} startingMessage={startingMessage} forcedMethodMessage={forcedMethodMessage} showPastePrompt={showPastePrompt} pastedCode={pastedCode} setPastedCode={setPastedCode} cursorOffset={cursorOffset} setCursorOffset={setCursorOffset} textInputColumns={textInputColumns} handleSubmitCode={handleSubmitCode} setOAuthStatus={setOAuthStatus} setLoginWithClaudeAi={setLoginWithClaudeAi} setLoginWithCodex={setLoginWithCodex} />
+        <OAuthStatusMessage onDone={onDone} oauthStatus={oauthStatus} mode={mode} startingMessage={startingMessage} forcedMethodMessage={forcedMethodMessage} showPastePrompt={showPastePrompt} pastedCode={pastedCode} setPastedCode={setPastedCode} cursorOffset={cursorOffset} setCursorOffset={setCursorOffset} textInputColumns={textInputColumns} handleSubmitCode={handleSubmitCode} setOAuthStatus={setOAuthStatus} setLoginWithClaudeAi={setLoginWithClaudeAi} setLoginWithCodex={setLoginWithCodex} />
       </Box>
     </Box>;
 }
 type OAuthStatusMessageProps = {
+  onDone: () => void;
   oauthStatus: OAuthStatus;
   mode: 'login' | 'setup-token';
   startingMessage: string | undefined;
@@ -448,6 +449,7 @@ type OAuthStatusMessageProps = {
 function OAuthStatusMessage(t0) {
   const $ = _c(52);
   const {
+    onDone,
     oauthStatus,
     mode,
     startingMessage,
