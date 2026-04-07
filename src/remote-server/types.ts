@@ -9,6 +9,7 @@ export type RemoteMessageType =
   | 'stream_end'
   | 'tool_use'
   | 'tool_result'
+  | 'thinking'
   | 'system'
   | 'session_info'
   | 'history'

@@ -140,11 +140,17 @@ function sendMessage(msg: any): void {
     if (text) {
       activeClient.sendAssistantMessage(text, msg.uuid)
     }
-    // Tool use blocks
+    // Tool use and thinking blocks
     const blocks = msg.message?.content
     if (Array.isArray(blocks)) {
       for (const block of blocks) {
-        if (block && block.type === 'tool_use') {
+        if (block && block.type === 'thinking' && block.thinking) {
+          activeClient.send({
+            type: 'thinking',
+            content: block.thinking,
+            timestamp: Date.now(),
+          })
+        } else if (block && block.type === 'tool_use') {
           if (block.name === 'ToolSearch') continue
           const input = block.input || {}
           const { label, args } = formatToolDisplay(block.name, input)
