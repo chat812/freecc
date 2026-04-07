@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+            arch: amd64
+            ext: ""
+          - os: ubuntu-24.04-arm
+            target: linux
+            arch: arm64
+            ext: ""
+          - os: macos-latest
+            target: macos
+            arch: arm64
+            ext: ""
+          - os: macos-13
+            target: macos
+            arch: amd64
+            ext: ""
+          - os: windows-latest
+            target: windows
+            arch: amd64
+            ext: ".exe"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build
+        run: bun run build
+
+      - name: Rename binary
+        shell: bash
+        run: |
+          src="freecc${{ matrix.ext }}"
+          dst="freecc-${{ matrix.target }}-${{ matrix.arch }}${{ matrix.ext }}"
+          mv "$src" "$dst"
+          echo "BINARY=$dst" >> $GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: freecc-${{ matrix.target }}-${{ matrix.arch }}
+          path: ${{ env.BINARY }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            Download the binary for your platform and run it:
+
+            ```bash
+            chmod +x freecc-linux-amd64
+            ./freecc-linux-amd64
+            ```
+
+            Or build from source:
+            ```bash
+            git clone https://github.com/chat812/freecc.git
+            cd freecc && bun install && bun run build
+            ```

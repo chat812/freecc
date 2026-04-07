@@ -34,6 +34,17 @@ Free CC extends Claude Code with features that aren't available in the official 
 
 ## Quick Install
 
+**Download binary** from [Releases](https://github.com/chat812/freecc/releases):
+
+```bash
+# Linux amd64
+wget https://github.com/chat812/freecc/releases/latest/download/freecc-linux-amd64
+chmod +x freecc-linux-amd64
+./freecc-linux-amd64
+```
+
+**Or build from source:**
+
 ```bash
 git clone https://github.com/chat812/freecc.git
 cd freecc
