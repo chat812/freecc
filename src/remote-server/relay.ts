@@ -10,12 +10,14 @@ type RemoteInputListener = (input: string) => void
 type RemoteInterruptListener = () => void
 type MessagesRef = { current: any[] }
 type PermissionHandler = { onAllow: () => void; onReject: () => void }
+type PromptHandler = { onSelect: (key: string) => void; onAbort: () => void }
 
 let activeClient: RemoteClient | null = null
 let inputListener: RemoteInputListener | null = null
 let interruptListener: RemoteInterruptListener | null = null
 let registeredMessagesRef: MessagesRef | null = null
 let currentPermissionHandler: PermissionHandler | null = null
+let currentPromptHandler: PromptHandler | null = null
 let pollingInterval: ReturnType<typeof setInterval> | null = null
 let lastLen = 0
 let lastText = ''
@@ -101,6 +103,33 @@ export function dispatchPermissionResponse(decision: 'allow' | 'reject'): void {
     currentPermissionHandler.onReject()
   }
   currentPermissionHandler = null
+}
+
+export function setRemotePromptRequest(
+  id: string | null,
+  message: string,
+  options: Array<{ key: string; label: string; description?: string }>,
+  handler: PromptHandler | null,
+): void {
+  currentPromptHandler = handler
+  if (!activeClient) return
+  if (id && handler) {
+    activeClient.send({
+      type: 'prompt_request',
+      id,
+      content: message,
+      options,
+      timestamp: Date.now(),
+    })
+  } else {
+    activeClient.send({ type: 'prompt_request', id: '', timestamp: Date.now() })
+  }
+}
+
+export function dispatchPromptResponse(selected: string): void {
+  if (!currentPromptHandler) return
+  currentPromptHandler.onSelect(selected)
+  currentPromptHandler = null
 }
 
 /**

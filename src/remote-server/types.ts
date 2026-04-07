@@ -14,6 +14,8 @@ export type RemoteMessageType =
   | 'interrupt'
   | 'permission_request'
   | 'permission_response'
+  | 'prompt_request'
+  | 'prompt_response'
   | 'system'
   | 'session_info'
   | 'history'
@@ -31,6 +33,8 @@ export interface RemoteMessage {
   processing?: boolean
   decision?: 'allow' | 'reject'
   detail?: string
+  selected?: string
+  options?: Array<{ key: string; label: string; description?: string }>
   cliConnected?: boolean
   webClients?: number
   messages?: RemoteMessage[]

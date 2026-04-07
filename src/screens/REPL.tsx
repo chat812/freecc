@@ -290,7 +290,7 @@ import { useMessageActions, MessageActionsKeybindings, MessageActionsBar, type M
 import { setClipboard } from '../ink/termio/osc.js';
 import type { ScrollBoxHandle } from '../ink/components/ScrollBox.js';
 import { createAttachmentMessage, getQueuedCommandAttachments } from '../utils/attachments.js';
-import { forwardMessagesToRemote, getRemoteClient, onRemoteInput, onRemoteInterrupt, setRemotePermissionRequest } from '../remote-server/relay.js';
+import { forwardMessagesToRemote, getRemoteClient, onRemoteInput, onRemoteInterrupt, setRemotePermissionRequest, setRemotePromptRequest } from '../remote-server/relay.js';
 
 // Stable empty array for hooks that accept MCPServerConnection[] — avoids
 // creating a new [] literal on every render in remote mode, which would
@@ -3632,6 +3632,7 @@ export function REPL({
   forwardMessagesToRemote(messagesRef);
   // Forward permission requests to remote web
   const lastRemotePermIdRef = useRef<string | null>(null);
+  const lastRemotePromptIdRef = useRef<string | null>(null);
   const currentRemotePerm = toolUseConfirmQueue[0];
   const currentRemotePermId = currentRemotePerm?.toolUseID ?? null;
   if (getRemoteClient() && currentRemotePermId !== lastRemotePermIdRef.current) {
@@ -3650,6 +3651,31 @@ export function REPL({
       );
     } else {
       setRemotePermissionRequest(null, '', '', null);
+    }
+  }
+  // Forward prompt requests (option selection) to remote web
+  const currentRemotePrompt = promptQueue[0];
+  const currentRemotePromptId = currentRemotePrompt?.request.prompt ?? null;
+  if (getRemoteClient() && currentRemotePromptId !== lastRemotePromptIdRef.current) {
+    lastRemotePromptIdRef.current = currentRemotePromptId;
+    if (currentRemotePrompt) {
+      setRemotePromptRequest(
+        currentRemotePrompt.request.prompt,
+        currentRemotePrompt.request.message,
+        currentRemotePrompt.request.options,
+        {
+          onSelect: (key: string) => {
+            currentRemotePrompt.resolve({ prompt_response: currentRemotePrompt.request.prompt, selected: key });
+            setPromptQueue(([, ...tail]) => tail);
+          },
+          onAbort: () => {
+            currentRemotePrompt.reject(new Error('Prompt cancelled by remote user'));
+            setPromptQueue(([, ...tail]) => tail);
+          },
+        }
+      );
+    } else {
+      setRemotePromptRequest(null, '', [], null);
     }
   }
 

@@ -15,6 +15,8 @@ export type RemoteClientEvents = {
   onInterrupt: () => void
   /** Remote web user responded to a permission request */
   onPermissionResponse: (decision: 'allow' | 'reject') => void
+  /** Remote web user selected an option from a prompt */
+  onPromptResponse: (selected: string) => void
   /** Session info updated */
   onSessionInfo: (info: { sessionId: string; webClients: number }) => void
   /** System notification from server */
@@ -273,6 +275,12 @@ export class RemoteClient {
       case 'permission_response':
         if (msg.decision) {
           this.events.onPermissionResponse?.(msg.decision)
+        }
+        break
+
+      case 'prompt_response':
+        if (msg.selected) {
+          this.events.onPromptResponse?.(msg.selected)
         }
         break
 
