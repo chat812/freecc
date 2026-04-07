@@ -11,6 +11,8 @@ import type { RemoteMessage, RemoteServerConfig, SessionCreateResponse } from '.
 export type RemoteClientEvents = {
   /** Remote web user sent a message */
   onUserMessage: (content: string) => void
+  /** Remote web user requested interrupt/stop */
+  onInterrupt: () => void
   /** Session info updated */
   onSessionInfo: (info: { sessionId: string; webClients: number }) => void
   /** System notification from server */
@@ -260,6 +262,10 @@ export class RemoteClient {
 
       case 'system':
         this.events.onSystem?.(msg.content ?? '')
+        break
+
+      case 'interrupt':
+        this.events.onInterrupt?.()
         break
 
       case 'pong':

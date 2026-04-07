@@ -290,7 +290,7 @@ import { useMessageActions, MessageActionsKeybindings, MessageActionsBar, type M
 import { setClipboard } from '../ink/termio/osc.js';
 import type { ScrollBoxHandle } from '../ink/components/ScrollBox.js';
 import { createAttachmentMessage, getQueuedCommandAttachments } from '../utils/attachments.js';
-import { forwardMessagesToRemote, onRemoteInput } from '../remote-server/relay.js';
+import { forwardMessagesToRemote, onRemoteInput, onRemoteInterrupt } from '../remote-server/relay.js';
 
 // Stable empty array for hooks that accept MCPServerConnection[] — avoids
 // creating a new [] literal on every render in remote mode, which would
@@ -3625,6 +3625,9 @@ export function REPL({
       clearBuffer: () => {},
       resetHistory: () => {},
     });
+  });
+  onRemoteInterrupt(() => {
+    abortControllerRef.current?.abort('user-cancel');
   });
   forwardMessagesToRemote(messagesRef);
 

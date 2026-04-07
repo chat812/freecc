@@ -7,10 +7,12 @@ import type { RemoteClient } from './client.js'
 import { getBuiltinPlugins } from '../plugins/builtinPlugins.js'
 
 type RemoteInputListener = (input: string) => void
+type RemoteInterruptListener = () => void
 type MessagesRef = { current: any[] }
 
 let activeClient: RemoteClient | null = null
 let inputListener: RemoteInputListener | null = null
+let interruptListener: RemoteInterruptListener | null = null
 let registeredMessagesRef: MessagesRef | null = null
 let pollingInterval: ReturnType<typeof setInterval> | null = null
 let lastLen = 0
@@ -48,6 +50,14 @@ export function getRemoteClient(): RemoteClient | null {
 
 export function onRemoteInput(listener: RemoteInputListener | null): void {
   inputListener = listener
+}
+
+export function onRemoteInterrupt(listener: RemoteInterruptListener | null): void {
+  interruptListener = listener
+}
+
+export function dispatchRemoteInterrupt(): void {
+  interruptListener?.()
 }
 
 // Track messages that came from the web so we don't echo them back
@@ -103,6 +113,7 @@ function startPolling(): void {
         // Use stream events for live text
         if (lastText.length === 0) {
           activeClient.sendStreamStart(id)
+          activeClient.send({ type: 'status', processing: true, timestamp: Date.now() })
         }
         activeClient.sendStreamDelta(id, delta)
       }
@@ -165,6 +176,8 @@ function sendMessage(msg: any): void {
         }
       }
     }
+    // Signal that processing is done after a complete assistant message
+    activeClient.send({ type: 'status', processing: false, timestamp: Date.now() })
   } else if (msgType === 'user') {
     // Forward local terminal input to web, but skip messages that came FROM the web
     if (text && text !== lastWebInput) {
@@ -175,6 +188,8 @@ function sendMessage(msg: any): void {
         id: msg.uuid,
         timestamp: Date.now(),
       })
+      // Signal that processing has started
+      activeClient.send({ type: 'status', processing: true, timestamp: Date.now() })
     }
     // Clear the marker after checking
     if (text === lastWebInput) lastWebInput = ''

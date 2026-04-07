@@ -8,6 +8,7 @@ import { Box, Text } from '../../ink.js'
 import { RemoteClient } from '../../remote-server/client.js'
 import {
   dispatchRemoteInput,
+  dispatchRemoteInterrupt,
   getRemoteClient,
   setRemoteClient,
 } from '../../remote-server/relay.js'
@@ -58,6 +59,7 @@ function RemoteConnectUI({
           { serverUrl: server, clientKey: key },
           {
             onUserMessage: (content) => { dispatchRemoteInput(content) },
+            onInterrupt: () => { dispatchRemoteInterrupt() },
             onConnectionChange: () => {},
             onError: () => {},
           },

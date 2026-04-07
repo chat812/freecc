@@ -10,6 +10,8 @@ export type RemoteMessageType =
   | 'tool_use'
   | 'tool_result'
   | 'thinking'
+  | 'status'
+  | 'interrupt'
   | 'system'
   | 'session_info'
   | 'history'
@@ -24,6 +26,7 @@ export interface RemoteMessage {
   id?: string
   sessionId?: string
   status?: string
+  processing?: boolean
   cliConnected?: boolean
   webClients?: number
   messages?: RemoteMessage[]
