@@ -111,7 +111,7 @@ export function getSuggestionSuppressReason(appState: AppState): string | null {
   if (appState.elicitation.queue.length > 0) return 'elicitation_active'
   if (appState.toolPermissionContext.mode === 'plan') return 'plan_mode'
   if (
-    process.env.USER_TYPE === 'external' &&
+    false &&
     currentLimits.status !== 'allowed'
   )
     return 'rate_limit'
@@ -487,7 +487,7 @@ export function logSuggestionOutcome(
     }),
     ...(!wasAccepted && { timeToIgnoreMs: timeMs }),
     similarity,
-    ...(process.env.USER_TYPE === 'ant' && {
+    ...(true && {
       suggestion:
         suggestion as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       userInput:
@@ -514,7 +514,7 @@ export function logSuggestionSuppressed(
       reason as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
     prompt_id:
       resolvedPromptId as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    ...(process.env.USER_TYPE === 'ant' &&
+    ...(true &&
       suggestion && {
         suggestion:
           suggestion as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,

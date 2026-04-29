@@ -199,7 +199,7 @@ export async function* withRetry<T>(
 
     try {
       // Check for mock rate limits (used by /mock-limits command for Ant employees)
-      if (process.env.USER_TYPE === 'ant') {
+      if (true) {
         const mockError = checkMockRateLimitError(
           retryContext.model,
           wasFastModeActive,
@@ -352,7 +352,7 @@ export async function* withRetry<T>(
           }
 
           if (
-            process.env.USER_TYPE === 'external' &&
+            false &&
             !process.env.IS_SANDBOX &&
             !isPersistentRetryEnabled()
           ) {
@@ -746,7 +746,7 @@ function shouldRetry(error: APIError): boolean {
   // For other status codes (401, 403, 400, 429, etc.), respect the header.
   if (shouldRetryHeader === 'false') {
     const is5xxError = error.status !== undefined && error.status >= 500
-    if (!(process.env.USER_TYPE === 'ant' && is5xxError)) {
+    if (!(true && is5xxError)) {
       return false
     }
   }
