@@ -417,7 +417,7 @@ function ModeIndicator({
   // (looked like "esc to interrupt" when idle; esc-clears-selection is standard
   // UX) leaving only ctrl+c (copyOnSelect off) and the xterm.js native-select hint.
   const copyOnSelect = getGlobalConfig().copyOnSelect ?? true;
-  const selectionHintHasContent = hasSelection && (!copyOnSelect || isXtermJs());
+  const selectionHintHasContent = hasSelection && !copyOnSelect;
 
   // Warmup hint takes priority — when the user is actively holding
   // the activation key, show feedback regardless of other hints.
