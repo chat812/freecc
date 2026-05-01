@@ -1,5 +1,6 @@
 import { z } from 'zod/v4'
 import { buildTool, type ToolDef } from '../../Tool.js'
+import { getAPIProvider } from '../../utils/model/providers.js'
 import type { PermissionUpdate } from '../../types/permissions.js'
 import { formatFileSize } from '../../utils/format.js'
 import { lazySchema } from '../../utils/lazySchema.js'
@@ -97,6 +98,9 @@ export const WebFetchTool = buildTool({
   },
   isReadOnly() {
     return true
+  },
+  isEnabled() {
+    return getAPIProvider() === 'firstParty'
   },
   toAutoClassifierInput(input) {
     return input.prompt ? `${input.url}: ${input.prompt}` : input.url

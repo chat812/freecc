@@ -320,7 +320,7 @@ export function getRecentReleaseNotesSync(
   lastSeenVersion?: string | null,
 ): string[] {
   // For ants, use bundled changelog
-  if (process.env.USER_TYPE === 'ant') {
+  if (true) {
     const changelog = MACRO.VERSION_CHANGELOG
     if (changelog) {
       const commits = changelog.trim().split('\n').filter(Boolean)

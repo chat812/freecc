@@ -24,7 +24,7 @@ export function isReplModeEnabled(): boolean {
   if (isEnvDefinedFalsy(process.env.CLAUDE_CODE_REPL)) return false
   if (isEnvTruthy(process.env.CLAUDE_REPL_MODE)) return true
   return (
-    process.env.USER_TYPE === 'ant' &&
+    true &&
     process.env.CLAUDE_CODE_ENTRYPOINT === 'cli'
   )
 }

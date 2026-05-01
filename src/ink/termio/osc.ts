@@ -65,6 +65,8 @@ export function getClipboardPath(): ClipboardPath {
   const nativeAvailable =
     process.platform === 'darwin' && !process.env['SSH_CONNECTION']
   if (nativeAvailable) return 'native'
+  // code-server --stdin-to-clipboard writes to the browser clipboard
+  if (process.platform === 'linux' && linuxCopy === 'code-server') return 'native'
   if (process.env['TMUX']) return 'tmux-buffer'
   return 'osc52'
 }
@@ -158,9 +160,9 @@ export async function setClipboard(text: string): Promise<string> {
 }
 
 // Linux clipboard tool: undefined = not yet probed, null = none available.
-// Probe order: wl-copy (Wayland) → xclip (X11) → xsel (X11 fallback).
+// Probe order: code-server (browser clipboard) → wl-copy (Wayland) → xclip (X11) → xsel (X11 fallback).
 // Cached after first attempt so repeated mouse-ups skip the probe chain.
-let linuxCopy: 'wl-copy' | 'xclip' | 'xsel' | null | undefined
+let linuxCopy: 'code-server' | 'wl-copy' | 'xclip' | 'xsel' | null | undefined
 
 /**
  * Shell out to a native clipboard utility as a safety net for OSC 52.
@@ -176,6 +178,10 @@ function copyNative(text: string): void {
       return
     case 'linux': {
       if (linuxCopy === null) return
+      if (linuxCopy === 'code-server') {
+        void execFileNoThrow('code-server', ['--stdin-to-clipboard'], opts)
+        return
+      }
       if (linuxCopy === 'wl-copy') {
         void execFileNoThrow('wl-copy', [], opts)
         return
@@ -188,25 +194,32 @@ function copyNative(text: string): void {
         void execFileNoThrow('xsel', ['--clipboard', '--input'], opts)
         return
       }
-      // First call: probe wl-copy (Wayland) then xclip/xsel (X11), cache winner.
-      void execFileNoThrow('wl-copy', [], opts).then(r => {
+      // First call: probe code-server (browser clipboard in web IDEs) →
+      // wl-copy (Wayland) → xclip/xsel (X11), cache winner.
+      void execFileNoThrow('code-server', ['--stdin-to-clipboard'], opts).then(r => {
         if (r.code === 0) {
-          linuxCopy = 'wl-copy'
+          linuxCopy = 'code-server'
           return
         }
-        void execFileNoThrow('xclip', ['-selection', 'clipboard'], opts).then(
-          r2 => {
-            if (r2.code === 0) {
-              linuxCopy = 'xclip'
-              return
-            }
-            void execFileNoThrow('xsel', ['--clipboard', '--input'], opts).then(
-              r3 => {
-                linuxCopy = r3.code === 0 ? 'xsel' : null
-              },
-            )
-          },
-        )
+        void execFileNoThrow('wl-copy', [], opts).then(r2 => {
+          if (r2.code === 0) {
+            linuxCopy = 'wl-copy'
+            return
+          }
+          void execFileNoThrow('xclip', ['-selection', 'clipboard'], opts).then(
+            r3 => {
+              if (r3.code === 0) {
+                linuxCopy = 'xclip'
+                return
+              }
+              void execFileNoThrow('xsel', ['--clipboard', '--input'], opts).then(
+                r4 => {
+                  linuxCopy = r4.code === 0 ? 'xsel' : null
+                },
+              )
+            },
+          )
+        })
       })
       return
     }
@@ -465,7 +478,7 @@ export const CLEAR_TAB_STATUS = osc(
  * DCS-passthrough carries the sequence to the outer terminal.
  */
 export function supportsTabStatus(): boolean {
-  return process.env.USER_TYPE === 'ant'
+  return true
 }
 
 /**

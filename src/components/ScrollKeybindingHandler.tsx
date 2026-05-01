@@ -393,7 +393,7 @@ export function ScrollKeybindingHandler({
       text: msg,
       color: 'suggestion',
       priority: 'immediate',
-      timeoutMs: path === 'native' ? 2000 : 4000
+      timeoutMs: path === 'native' ? 2000 : 5000
     });
   }
   function copyAndToast(): void {

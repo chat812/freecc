@@ -5,14 +5,14 @@ import { isEnvTruthy } from '../utils/envUtils.js'
 export function getGrowthBookClientKey(): string {
   const useExperimentalClientKey =
     isEnvTruthy(process.env.CLAUDE_CODE_EXPERIMENTAL_BUILD) ||
-    (process.env.USER_TYPE === 'ant' &&
+    (true &&
       isEnvTruthy(process.env.ENABLE_GROWTHBOOK_DEV))
 
   if (useExperimentalClientKey) {
     return 'sdk-yZQvlplybuXjYh6L'
   }
 
-  return process.env.USER_TYPE === 'ant'
+  return true
     ? 'sdk-xRVcrliHIlrg4og4'
     : 'sdk-zAZezfDKGoZuXXKe'
 }
